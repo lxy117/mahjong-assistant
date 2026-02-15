@@ -59,6 +59,13 @@ jobs:
         # Build the app with verbose output
         echo "Starting build process..."
         buildozer android debug verbose 2>&1 | tee build.log
+        # Set environment variables
+        export ANDROID_HOME=~/Android/Sdk
+        export ANDROID_NDK_HOME=~/Android/Sdk/ndk/25.2.9519653
+        export PATH=$PATH:~/Android/Sdk/cmdline-tools/latest/bin:~/Android/Sdk/platform-tools
+        
+        # Build the app
+        buildozer android debug
         
         # Check build results
         echo "Build completed, checking results:"
