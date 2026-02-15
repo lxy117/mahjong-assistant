@@ -22,69 +22,40 @@ jobs:
     - name: Install system dependencies
       run: |
         sudo apt-get update
-        sudo apt-get install -y \
-            build-essential \
-            git \
-            curl \
-            wget \
-            unzip \
-            openjdk-17-jdk \
-            libncurses5-dev \
-            libncursesw5-dev \
-            zlib1g-dev \
-            libssl-dev \
-            libbz2-dev \
-            libreadline-dev \
-            libsqlite3-dev \
-            libffi-dev \
-            liblzma-dev \
-            tk-dev
+        sudo apt-get install -y build-essential git curl wget unzip openjdk-17-jdk
 
     - name: Install Python dependencies
       run: |
         python -m pip install --upgrade pip
-        pip install --upgrade setuptools wheel
-        pip install buildozer appdirs colorama jinja2 sh build toml packaging
-
-    - name: Set up Android SDK and NDK
-      run: |
-        # Create Android SDK directory
-        mkdir -p ~/Android/Sdk
-        
-        # Download and install Android Command Line Tools
-        cd ~/Android/Sdk
-        wget -q https://dl.google.com/android/repository/commandlinetools-linux-6514223_latest.zip
-        unzip -q commandlinetools-linux-6514223_latest.zip
-        rm commandlinetools-linux-6514223_latest.zip
-        
-        # Move to cmdline-tools/latest
-        mkdir -p cmdline-tools/latest
-        mv cmdline-tools/bin cmdline-tools/latest/ || echo "Bin directory not found"
-        mv cmdline-tools/lib cmdline-tools/latest/ || echo "Lib directory not found"
-        mv cmdline-tools/source.properties cmdline-tools/latest/ || echo "Source properties not found"
-        
-        # Set environment variables
-        echo "ANDROID_HOME=~/Android/Sdk" >> ~/.bashrc
-        echo "ANDROID_NDK_HOME=~/Android/Sdk/ndk/25.2.9519653" >> ~/.bashrc
-        echo "PATH=\$PATH:~/Android/Sdk/cmdline-tools/latest/bin:~/Android/Sdk/platform-tools" >> ~/.bashrc
-        source ~/.bashrc
+        pip install buildozer
 
     - name: Build Android App
       run: |
-        # Set environment variables
-        export ANDROID_HOME=~/Android/Sdk
-        export ANDROID_NDK_HOME=~/Android/Sdk/ndk/25.2.9519653
-        export PATH=$PATH:~/Android/Sdk/cmdline-tools/latest/bin:~/Android/Sdk/platform-tools
+        # Show current directory and files
+        ls -la
         
-        # Initialize buildozer
-        buildozer init || echo "Buildozer init failed, continuing..."
+        # Initialize buildozer if needed
+        if [ ! -f "buildozer.spec" ]; then
+          buildozer init
+        fi
         
-        # Build the app
-        buildozer android debug 2>&1 || echo "Build failed, checking logs..."
+        # Show buildozer.spec content
+        cat buildozer.spec
+        
+        # Build the app with verbose output
+        buildozer android debug verbose
+        
+        # Check if APK was generated
+        find . -name "*.apk" -type f
+        
+        # Show bin directory content
+        ls -la bin/ || echo "bin directory not found"
 
     - name: Upload APK
       uses: actions/upload-artifact@v4
       with:
         name: mahjong-assist-apk
-        path: bin/*.apk
+        path: |
+          bin/*.apk
+          ./*.apk
         if-no-files-found: warn
